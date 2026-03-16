@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>用例検索</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* ── ヘッダー ── */
+    .header {
+      border-bottom: 1px solid #e8e8e8;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: #1a1a1a;
+    }
+
+    .logo-sep {
+      width: 1px;
+      height: 18px;
+      background: #d0d0d0;
+    }
+
+    .logo-sub {
+      font-size: 0.8rem;
+      color: #888;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── コンテンツ ── */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ── 検索エリア ── */
+    .search-area {
+      margin-bottom: 40px;
+    }
+
+    .search-label {
+      font-size: 0.78rem;
+      color: #888;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 13px 18px;
+      font-size: 1rem;
+      font-family: 'Noto Serif JP', serif;
+      border: 1.5px solid #d0d0d0;
+      border-radius: 10px;
+      outline: none;
+      color: #1a1a1a;
+      background: #fff;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: #1a1a1a;
+    }
+
+    .search-input::placeholder {
+      color: #bbb;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    .search-btn {
+      padding: 13px 24px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover { background: #333; }
+
+    /* サジェスト */
+    .suggest-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .suggest-label {
+      font-size: 0.76rem;
+      color: #aaa;
+      align-self: center;
+    }
+
+    .suggest-tag {
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 999px;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: #fff;
+    }
+
+    .suggest-tag:hover {
+      border-color: #1a1a1a;
+      color: #1a1a1a;
+    }
+
+    /* ── 結果ヘッダー ── */
+    .result-header {
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .result-header strong { color: #1a1a1a; }
+
+    /* ── 用例カード ── */
+    .card {
+      padding: 22px 0;
+      border-bottom: 1px solid #f0f0f0;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-gov  { background: #f0f7f0; color: #3a6b3a; border: 1px solid #c8dfc8; }
+    .badge-lit  { background: #fdf5ee; color: #8b4513; border: 1px solid #e8d0b8; }
+    .badge-news { background: #eef3fa; color: #2d5a8e; border: 1px solid #c0d0e8; }
+
+    .badge-level {
+      font-size: 0.7rem;
+      color: #aaa;
+      border: 1px solid #e8e8e8;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .sentence {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.05rem;
+      line-height: 2;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+
+    .sentence mark {
+      background: #fff3d0;
+      color: #b05000;
+      border-radius: 2px;
+      padding: 0 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .source-text {
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    .source-text span {
+      color: #888;
+    }
+
+    .copy-btn {
+      font-size: 0.75rem;
+      color: #aaa;
+      background: none;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      border-color: #1a1a1a;
+      color: #1a1a1a;
+    }
+
+    /* ── スプレッドシート連携 ── */
+    .sheet-area {
+      margin-bottom: 32px;
+      padding: 18px 20px;
+      background: #f8f8f8;
+      border-radius: 10px;
+      border: 1px solid #e8e8e8;
+    }
+
+    .sheet-label {
+      font-size: 0.76rem;
+      color: #888;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .sheet-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sheet-input {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      border: 1.5px solid #d0d0d0;
+      border-radius: 8px;
+      outline: none;
+      color: #1a1a1a;
+      background: #fff;
+      transition: border-color 0.2s;
+    }
+
+    .sheet-input:focus { border-color: #1a1a1a; }
+
+    .sheet-btn {
+      padding: 10px 18px;
+      background: #fff;
+      color: #1a1a1a;
+      border: 1.5px solid #1a1a1a;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .sheet-btn:hover { background: #1a1a1a; color: #fff; }
+
+    .sheet-status {
+      font-size: 0.76rem;
+      margin-top: 8px;
+      color: #888;
+      min-height: 18px;
+    }
+
+    .sheet-status.ok  { color: #3a6b3a; }
+    .sheet-status.err { color: #b04040; }
+
+    /* ── 空・初期状態 ── */
+    .state-box {
+      text-align: center;
+      padding: 56px 20px;
+      color: #bbb;
+    }
+
+    .state-box .icon { font-size: 2.2rem; margin-bottom: 12px; }
+
+    .state-box h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .state-box p {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">用例検索</div>
+  <div class="logo-sep"></div>
+  <div class="logo-sub">日本語用例データベース</div>
+</header>
+
+<div class="container">
+
+  <div class="sheet-area">
+    <div class="sheet-label">SPREADSHEET（任意）</div>
+    <div class="sheet-row">
+      <input
+        class="sheet-input"
+        id="sheetUrl"
+        type="text"
+        placeholder="GoogleスプレッドシートのCSV公開URLを貼り付け"
+      />
+      <button class="sheet-btn" onclick="loadSheet()">読み込む</button>
+    </div>
+    <div class="sheet-status" id="sheetStatus">スプレッドシートを読み込むと、データが自動で追加されます</div>
+  </div>
+
+  <div class="search-area">
+    <div class="search-label">SEARCH</div>
+    <div class="search-row">
+      <input
+        class="search-input"
+        id="searchInput"
+        type="text"
+        placeholder="調べたい言葉を入力　例：希望、自由、改革"
+        onkeydown="if(event.key==='Enter') doSearch()"
+      />
+      <button class="search-btn" onclick="doSearch()">検索</button>
+    </div>
+    <div class="suggest-row">
+      <span class="suggest-label">例：</span>
+      <span class="suggest-tag" onclick="quick('自由')">自由</span>
+      <span class="suggest-tag" onclick="quick('権利')">権利</span>
+      <span class="suggest-tag" onclick="quick('義務')">義務</span>
+      <span class="suggest-tag" onclick="quick('意志')">意志</span>
+      <span class="suggest-tag" onclick="quick('主権')">主権</span>
+      <span class="suggest-tag" onclick="quick('契約')">契約</span>
+      <span class="suggest-tag" onclick="quick('正義')">正義</span>
+      <span class="suggest-tag" onclick="quick('平等')">平等</span>
+      <span class="suggest-tag" onclick="quick('力')">力</span>
+      <span class="suggest-tag" onclick="quick('服従')">服従</span>
+      <span class="suggest-tag" onclick="quick('希望')">希望</span>
+      <span class="suggest-tag" onclick="quick('幸福')">幸福</span>
+      <span class="suggest-tag" onclick="quick('琥珀')">琥珀</span>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="state-box">
+      <div class="icon">📖</div>
+      <h3>言葉を入力して検索してください</h3>
+      <p>政府文書・白書、青空文庫の文学作品、<br>ニュース記事から用例を探せます。</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DATA = [
+  { id:1,  kw:['自由'], sentence:'すべての国民は、健康で文化的な最低限度の生活を営む権利を有し、自由にその生涯を送ることができる。', source:'内閣府「令和5年版 高齢社会白書」', type:'gov', level:'中級' },
+  { id:2,  kw:['自由'], sentence:'自由とは他者の自由を侵害しない範囲において、各人が自己の意志に従って行動できることをいう。', source:'文部科学省「民主主義について」', type:'gov', level:'上級' },
+  { id:3,  kw:['自由'], sentence:'人はみな、生まれながらにして自由であり、かつ、尊厳と権利とについて平等である。', source:'世界人権宣言（外務省訳）', type:'gov', level:'中級' },
+  { id:4,  kw:['自由'], sentence:'何という自由な、美しい、感謝すべき生活だろう。彼は嬉し涙を流した。', source:'夏目漱石「坊っちゃん」青空文庫', type:'lit', level:'中級' },
+  { id:5,  kw:['自由'], sentence:'自由の翼を持ちながら、人は往々にして自ら鳥籠を作り、その中に安住しようとするものだ。', source:'芥川龍之介「侏儒の言葉」青空文庫', type:'lit', level:'上級' },
+
+  { id:6,  kw:['希望'], sentence:'若い世代が希望を持って働ける社会の実現に向け、政府は雇用対策を強化してまいります。', source:'内閣府「経済財政白書 令和4年版」', type:'gov', level:'中級' },
+  { id:7,  kw:['希望'], sentence:'希望は、いつも遠い星のようなものだ。追いかければ追いかけるほど、遠ざかってゆく。', source:'太宰治「人間失格」青空文庫', type:'lit', level:'中級' },
+  { id:8,  kw:['希望'], sentence:'子どもたちが希望を持って未来を切り拓いていける社会の構築が急務となっている。', source:'文部科学省「教育白書」', type:'gov', level:'初級' },
+  { id:9,  kw:['希望'], sentence:'いかなる絶望の中にも、一筋の光として希望は存在すると、彼は信じていた。', source:'宮沢賢治「銀河鉄道の夜」青空文庫', type:'lit', level:'中級' },
+
+  { id:10, kw:['改革'], sentence:'行政改革の推進により、政府の効率化と透明性の向上を図ることが求められている。', source:'行政改革推進会議「答申」2023年', type:'gov', level:'上級' },
+  { id:11, kw:['改革'], sentence:'改革とは、単に制度を変えることではなく、人々の意識そのものを変えていくことである。', source:'経済産業省「産業構造審議会報告書」', type:'gov', level:'上級' },
+  { id:12, kw:['改革'], sentence:'社会の改革を求める声は、時代を超えて若者たちの中から生まれてきた。', source:'NHKニュース', type:'news', level:'初級' },
+
+  { id:13, kw:['言葉'], sentence:'言葉は、人の心を癒すこともあれば、深く傷つけることもある、鋭い刃である。', source:'芥川龍之介「文芸的な、余りに文芸的な」青空文庫', type:'lit', level:'中級' },
+  { id:14, kw:['言葉'], sentence:'国語施策においては、言葉の正確な使用と豊かな表現力の育成が重要な課題とされる。', source:'文化庁「国語に関する世論調査」', type:'gov', level:'上級' },
+  { id:15, kw:['言葉'], sentence:'言葉を失うほどの美しさとは、このような景色のことをいうのかもしれないと、彼女は思った。', source:'川端康成「雪国」青空文庫', type:'lit', level:'初級' },
+  { id:16, kw:['言葉'], sentence:'SNS上での言葉の暴力が社会問題となっており、若者のメンタルヘルスへの影響が懸念されている。', source:'読売新聞デジタル', type:'news', level:'初級' },
+
+  { id:17, kw:['社会'], sentence:'少子高齢化の進展に伴い、社会保障制度の持続可能性が大きな政策課題となっている。', source:'厚生労働省「厚生労働白書 令和5年版」', type:'gov', level:'上級' },
+  { id:18, kw:['社会'], sentence:'社会とは、個人が孤立することなく、互いに支え合いながら生きるための共同体である。', source:'中学校社会科教科書（文部科学省検定）', type:'gov', level:'初級' },
+  { id:19, kw:['社会'], sentence:'近代社会の成立とともに、個人の自由と社会秩序をいかに調和させるかが問われるようになった。', source:'政治学概論（国立大学出版）', type:'news', level:'上級' },
+
+  { id:20, kw:['民主主義'], sentence:'民主主義の根幹は、国民一人ひとりが政治に参加し、自らの声を届けることにある。', source:'総務省「選挙啓発資料」', type:'gov', level:'中級' },
+  { id:21, kw:['民主主義'], sentence:'民主主義とは多数決のことではなく、少数意見を尊重しながら合意を形成していく過程である。', source:'内閣府「民主主義に関する特別世論調査」', type:'gov', level:'上級' },
+  { id:22, kw:['民主主義'], sentence:'民主主義の危機が世界各地で叫ばれる中、日本でも政治への無関心が深刻な問題となっている。', source:'朝日新聞', type:'news', level:'中級' },
+
+  { id:23, kw:['夢'], sentence:'夢を持つことは、人生を前へと進ませる原動力であり、困難に立ち向かう勇気の源泉となる。', source:'文部科学省「子どもの夢と希望」調査報告', type:'gov', level:'初級' },
+  { id:24, kw:['夢'], sentence:'夢は夢であるうちが一番美しい。叶えてしまえば、それはもう現実になってしまうのだから。', source:'芥川龍之介「羅生門」青空文庫', type:'lit', level:'中級' },
+  { id:25, kw:['夢'], sentence:'彼女は毎晩、同じ夢を見た。どこまでも続く青い海と、遠くに霞む白い帆の夢を。', source:'川端康成「伊豆の踊子」青空文庫', type:'lit', level:'初級' },
+
+  { id:26, kw:['愛'], sentence:'愛するということは、相手の存在そのものを、条件なく受け入れることではないだろうか。', source:'夏目漱石「こころ」青空文庫', type:'lit', level:'中級' },
+  { id:27, kw:['愛'], sentence:'国を愛する心は、その国の自然や文化、そして人々との深い絆の中から育まれるものである。', source:'内閣府「国民の意識に関する世論調査」', type:'gov', level:'中級' },
+
+  { id:28, kw:['時間'], sentence:'時間は万人に等しく与えられた唯一の財産であり、その使い方が人生の質を決めるといえる。', source:'太宰治「走れメロス」青空文庫', type:'lit', level:'初級' },
+  { id:29, kw:['時間'], sentence:'労働時間の短縮と生産性の向上を両立させることが、働き方改革の核心的な課題である。', source:'厚生労働省「働き方改革推進支援事業」', type:'gov', level:'中級' },
+  { id:30, kw:['時間'], sentence:'時間の経過とともに、かつては重要とされた問題が風化し、新たな課題が浮上してくる。', source:'NHKニュース解説', type:'news', level:'中級' },
+
+  { id:31, kw:['井桁'], sentence:'水は井桁の上に凸面をなして、盛り上げたようになって、余ったのは四方へ流れ落ちるのである。', source:'森鷗外「杯」青空文庫', type:'lit', level:'上級' },
+  { id:32, kw:['井桁'], sentence:'青い美しい苔が井桁の外を掩うている。', source:'森鷗外「杯」青空文庫', type:'lit', level:'上級' },
+
+  { id:33, kw:['苔'], sentence:'青い美しい苔が井桁の外を掩うている。', source:'森鷗外「杯」青空文庫', type:'lit', level:'中級' },
+
+  { id:34, kw:['白雲'], sentence:'漂う白雲の間を漏れて、木々の梢を今一度漏れて、朝日の光が荒い縞のように泉の畔に差す。', source:'森鷗外「杯」青空文庫', type:'lit', level:'上級' },
+
+  { id:35, kw:['詞'], sentence:'七つの濃い紅の唇は開いたままで詞がない。', source:'森鷗外「杯」青空文庫', type:'lit', level:'上級' },
+
+  { id:36, kw:['琥珀'], sentence:'琥珀のような顔から、サントオレアの花のような青い目が覗いている。永遠の驚をもって自然を覗いている。', source:'森鷗外「杯」青空文庫', type:'lit', level:'上級' },
+  { id:37, kw:['琥珀'], sentence:'第八の娘は黙って、その熔巌の色をした杯を出した。小さい杯は琥珀いろの手の、腱ばかりから出来ているような指を離れて、薄紅のむっくりした、一つの手から他の手に渡った。', source:'森鷗外「杯」青空文庫', type:'lit', level:'上級' },
+
+  { id:38, kw:['自由'], sentence:'人間は自由なものとして生まれた。しかしいたるところで鎖につながれている。', source:'ルソー「社会契約論」第一巻第一章（AI訳）', type:'lit', level:'初級' },
+  { id:39, kw:['自由'], sentence:'自由を放棄することは、人間であることを放棄し、人類の権利を、さらにはその義務をも放棄することである。', source:'ルソー「社会契約論」第一巻第四章（AI訳）', type:'lit', level:'上級' },
+  { id:40, kw:['自由'], sentence:'市民的自由は一般意志によってのみ制限される。それ以外のいかなる力によっても、人の自由を正当に奪うことはできない。', source:'ルソー「社会契約論」第一巻第八章（AI訳）', type:'lit', level:'上級' },
+
+  { id:41, kw:['権利'], sentence:'社会秩序は神聖な権利であり、他のすべての権利の基礎をなす。しかしこの権利は自然から来るものではなく、約束の上に築かれなければならない。', source:'ルソー「社会契約論」第一巻第一章（AI訳）', type:'lit', level:'上級' },
+  { id:42, kw:['権利'], sentence:'力は権利を生み出さない。われわれが服従すべき義務を負うのは、正当な権力に対してのみである。', source:'ルソー「社会契約論」第一巻第三章（AI訳）', type:'lit', level:'中級' },
+
+  { id:43, kw:['服従'], sentence:'強者は、力を権利に、服従を義務に変えない限り、常に主人であり続けるほど強くはない。', source:'ルソー「社会契約論」第一巻第三章（AI訳）', type:'lit', level:'中級' },
+  { id:44, kw:['服従'], sentence:'力に屈するのは必然の行為であり、意志の行為ではない。だとすれば、それはいかなる意味においても義務とはなりえない。', source:'ルソー「社会契約論」第一巻第三章（AI訳）', type:'lit', level:'上級' },
+
+  { id:45, kw:['義務'], sentence:'自由を放棄することは、人類の義務をも放棄することである。すべてを放棄する者に、いかなる補償も不可能である。', source:'ルソー「社会契約論」第一巻第四章（AI訳）', type:'lit', level:'上級' },
+
+  { id:46, kw:['主権'], sentence:'主権は譲渡することができない。主権者は集合的存在であり、それは自分自身によってのみ代表されうる。', source:'ルソー「社会契約論」第二巻第一章（AI訳）', type:'lit', level:'上級' },
+
+  { id:47, kw:['契約'], sentence:'各構成員の身体と財産を共同の力によって守り保護し、しかも各人が全員と結びつきながら、自分自身にのみ服従し、以前と同じく自由であり続けられるような結合の形式を見つけること。これが社会契約の根本問題である。', source:'ルソー「社会契約論」第一巻第六章（AI訳）', type:'lit', level:'上級' },
+
+  { id:48, kw:['意志'], sentence:'一般意志は常に公共の利益を目指す。しかし、それは必ずしも人民の意志と一致するわけではない。', source:'ルソー「社会契約論」第二巻第三章（AI訳）', type:'lit', level:'上級' },
+  { id:49, kw:['意志'], sentence:'意志の自由こそが人間を道徳的存在たらしめる。食欲の衝動のままに動くことは奴隷状態であり、自ら定めた法に従うことが自由である。', source:'ルソー「社会契約論」第一巻第八章（AI訳）', type:'lit', level:'上級' },
+
+  { id:50, kw:['正義'], sentence:'正義と利益とがいかなる場合においても分かたれることのないよう、権利が命じることと利益が要求することとを常に結びつけるよう努める。', source:'ルソー「社会契約論」第一巻序文（AI訳）', type:'lit', level:'上級' },
+
+  { id:51, kw:['平等'], sentence:'人間はだれしも、自由で平等なものとして生まれている。自由を手放すのは、それ自身の利益のためにのみ正当化される。', source:'ルソー「社会契約論」第一巻第二章（AI訳）', type:'lit', level:'中級' },
+
+  { id:52, kw:['力'], sentence:'力は権利を生まない。もし力が権利を生むとすれば、その力よりも大きな力が現れた瞬間に、権利もまた入れ替わることになる。', source:'ルソー「社会契約論」第一巻第三章（AI訳）', type:'lit', level:'中級' },
+];
+
+const typeLabel = { gov:'政府文書', lit:'文学', news:'ニュース' };
+const typeIcon  = { gov:'🏛', lit:'📚', news:'📰' };
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  render(q);
+}
+
+function quick(word) {
+  document.getElementById('searchInput').value = word;
+  render(word);
+}
+
+function render(q) {
+  const allData = [...DATA, ...sheetData];
+  const matched = allData.filter(d =>
+    d.sentence.includes(q) || d.kw.some(k => k.includes(q) || q.includes(k))
+  );
+
+  const el = document.getElementById('results');
+
+  if (matched.length === 0) {
+    el.innerHTML = `
+      <div class="state-box">
+        <div class="icon">🔍</div>
+        <h3>「${q}」の用例が見つかりませんでした</h3>
+        <p>別の言葉で試してみてください。</p>
+      </div>`;
+    return;
+  }
+
+  let html = `<div class="result-header">「<strong>${q}</strong>」の用例 <strong>${matched.length}</strong> 件</div>`;
+
+  matched.forEach((d, i) => {
+    const highlighted = d.sentence.replaceAll(q, `<mark>${q}</mark>`);
+    html += `
+      <div class="card" style="animation-delay:${i * 0.04}s" id="c${d.id}">
+        <div class="card-meta">
+          <span class="badge badge-${d.type}">${typeIcon[d.type]} ${typeLabel[d.type]}</span>
+          <span class="badge-level">${d.level}</span>
+        </div>
+        <div class="sentence">${highlighted}</div>
+        <div class="card-footer">
+          <div class="source-text">出典：<span>${d.source}</span></div>
+          <button class="copy-btn" onclick="copy(${d.id}, this)">コピー</button>
+        </div>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+
+// ── スプレッドシート読み込み ──
+let sheetData = [];
+
+async function loadSheet() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  const status = document.getElementById('sheetStatus');
+
+  if (!url) {
+    status.className = 'sheet-status err';
+    status.textContent = 'URLを入力してください';
+    return;
+  }
+
+  status.className = 'sheet-status';
+  status.textContent = '読み込み中...';
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('取得失敗');
+    const text = await res.text();
+    const rows = text.trim().split('\n').slice(1); // 1行目はヘッダーとしてスキップ
+
+    sheetData = rows
+      .map((row, i) => {
+        const cols = parseCSVRow(row);
+        if (cols.length < 3 || !cols[0] || !cols[1]) return null;
+        return {
+          id: 10000 + i,
+          kw: [cols[0].trim()],
+          sentence: cols[1].trim(),
+          source: cols[2] ? cols[2].trim() : '',
+          type: cols[3] ? cols[3].trim() : 'gov',
+          level: cols[4] ? cols[4].trim() : '中級',
+        };
+      })
+      .filter(Boolean);
+
+    status.className = 'sheet-status ok';
+    status.textContent = `✅ ${sheetData.length}件を読み込みました（検索に反映済み）`;
+    localStorage.setItem('sheetUrl', url);
+  } catch (e) {
+    status.className = 'sheet-status err';
+    status.textContent = '❌ 読み込みに失敗しました。URLとスプレッドシートの公開設定を確認してください';
+  }
+}
+
+function parseCSVRow(row) {
+  const result = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < row.length; i++) {
+    const c = row[i];
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { result.push(cur); cur = ''; continue; }
+    cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+// 前回のURLを復元
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('sheetUrl');
+  if (saved) {
+    document.getElementById('sheetUrl').value = saved;
+    loadSheet();
+  }
+});
+
+function copy(id, btn) {
+  const allData = [...DATA, ...sheetData];
+  const d = allData.find(x => x.id === id);
+  navigator.clipboard.writeText(`${d.sentence}\n出典：${d.source}`).then(() => {
+    btn.textContent = 'コピーしました';
+    setTimeout(() => btn.textContent = 'コピー', 1600);
+  });
+}
+</script>
+</body>
+</html>
